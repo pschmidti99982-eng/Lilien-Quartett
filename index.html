@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0057a8">
+<title>Lilien-Quartett</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+
+/* Layout: one phone-sized column; the player's own card dominates, the last duel sits above it as a compact strip. */
+:root {
+  --bg: #eef2f8;
+  --surface: #ffffff;
+  --fg: #0d1b2e;
+  --muted: #56657a;
+  --line: #d3dbe7;
+  --lilie: #0057a8;       /* Darmstadt blue */
+  --lilie-ink: #ffffff;
+  --gold: #c9a23a;
+  --win: #1d7a46;
+  --lose: #b23a3a;
+  --font-display: "Saira Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Source Sans 3", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b1320; --surface: #142033; --fg: #e8eef7; --muted: #9aa9bf; --line: #24344d;
+  --lilie: #3d8de0; --lilie-ink: #06101d; --gold: #e0bd5a; --win: #4cc283; --lose: #ee7b7b; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b1320; --surface: #142033; --fg: #e8eef7; --muted: #9aa9bf; --line: #24344d;
+  --lilie: #3d8de0; --lilie-ink: #06101d; --gold: #e0bd5a; --win: #4cc283; --lose: #ee7b7b; color-scheme: dark }
+
+html, body { min-height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 460px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 32px; display: flex; flex-direction: column; gap: 16px; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: 30px; letter-spacing: .01em; margin: 0; text-transform: uppercase; line-height: 1; }
+h1 span { color: var(--lilie); }
+.small { font-size: 13px; color: var(--muted); }
+h2 { font-family: var(--font-display); font-weight: 700; font-size: 20px; margin: 0; text-transform: uppercase; letter-spacing: .03em; text-wrap: balance; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.score { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+.score .who { display: flex; flex-direction: column; min-width: 0; }
+.score .who:last-child { text-align: right; }
+.score .nm { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.score .n { font-family: var(--font-display); font-weight: 800; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
+.score .vs { font-family: var(--font-display); color: var(--muted); font-size: 14px; text-transform: uppercase; }
+.turnpill { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 99px; background: var(--lilie); color: var(--lilie-ink); }
+
+/* Quartett card */
+.card { background: var(--surface); border: 2px solid var(--lilie); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+.card .top { background: var(--lilie); color: var(--lilie-ink); padding: 12px 14px 10px; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: center; }
+.card .code { grid-row: span 2; font-family: var(--font-display); font-weight: 800; font-size: 34px; line-height: 1; border: 2px solid currentColor; border-radius: 8px; padding: 4px 8px; font-variant-numeric: tabular-nums; }
+.card .name { font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1.05; text-transform: uppercase; min-width: 0; overflow-wrap: anywhere; }
+.card .meta { font-size: 13px; opacity: .9; }
+.card .era { font-weight: 700; letter-spacing: .05em; text-transform: uppercase; font-size: 11px; }
+.card .art { height: 64px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--line); color: var(--lilie); }
+.card .art svg { height: 46px; width: auto; }
+.rows { display: flex; flex-direction: column; }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 11px 14px; border-top: 1px solid var(--line); font-size: 16px; background: transparent; color: var(--fg); border-left: 0; border-right: 0; border-bottom: 0; text-align: left; font-family: inherit; width: 100%; }
+.row:first-child { border-top: 0; }
+.row .v { font-family: var(--font-display); font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
+button.row { cursor: pointer; }
+button.row:hover { background: color-mix(in srgb, var(--lilie) 10%, transparent); }
+button.row:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; }
+button.row::after { content: ""; }
+.row.chosen { background: color-mix(in srgb, var(--gold) 22%, transparent); }
+.card .foot { padding: 8px 14px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
+
+.hint { text-align: center; font-weight: 600; }
+.hint.go { color: var(--lilie); }
+
+/* duel strip */
+.duel { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mini { border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mini.w { border-color: var(--win); box-shadow: inset 0 0 0 1px var(--win); }
+.mini .who { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.mini .pn { font-weight: 700; overflow-wrap: anywhere; }
+.mini .pv { font-family: var(--font-display); font-weight: 800; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.result { font-family: var(--font-display); font-weight: 700; font-size: 20px; text-transform: uppercase; }
+.result.w { color: var(--win); } .result.l { color: var(--lose); }
+
+.btn { font: 700 16px/1 var(--font-body); padding: 13px 16px; border-radius: 10px; border: 0; background: var(--lilie); color: var(--lilie-ink); cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+.btn:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.btns .btn { flex: 1 1 auto; }
+input[type=text] { font: 16px var(--font-body); padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); width: 100%; box-sizing: border-box; }
+.seats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.seat { border: 1px dashed var(--line); border-radius: 10px; padding: 12px; min-width: 0; }
+.seat.taken { border-style: solid; border-color: var(--lilie); }
+.seat .lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.seat .nm { font-weight: 700; overflow-wrap: anywhere; }
+.err { color: var(--lose); font-weight: 600; }
+.confirm { display: flex; flex-direction: column; gap: 8px; }
+.trophy { font-family: var(--font-display); font-weight: 800; font-size: 34px; text-transform: uppercase; color: var(--lilie); line-height: 1.05; text-wrap: balance; }
+@media (prefers-reduced-motion: no-preference) {
+  .flip { animation: flip .35s ease-out; }
+  @keyframes flip { from { transform: rotateY(70deg); opacity: .3 } to { transform: none; opacity: 1 } }
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Lilien<span>-</span>Quartett</h1>
+    <span class="small">SV Darmstadt 98 · 32 Karten</span>
+  </header>
+  <main id="app" class="wrap" style="padding:0">
+    <div class="panel"><h2>Spiel wird geladen</h2><p class="small" style="margin:0">Gleich siehst du, ob schon jemand am Tisch sitzt.</p></div>
+  </main>
+  <p class="small" style="margin:0">Spiele, Tore, Vorlagen: alle Pflichtspiele für den SVD laut fussballdaten.de, Stand Oktober 2026. Marktwerte sind grobe Schätzungen (ca.), Größen mit ~ ebenso.</p>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCTG1qtt2CXp9lZ_YGWlEGELva66Z0rDMA",
+  authDomain: "lilien-quartett.firebaseapp.com",
+  databaseURL: "https://lilien-quartett-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "lilien-quartett",
+  storageBucket: "lilien-quartett.firebasestorage.app",
+  messagingSenderId: "416701878782",
+  appId: "1:416701878782:web:c354ece122c1bc3f93f0af"
+};
+
+const DATA = {"stand": "2026-10-12", "quelle": "Spiele, Tore, Vorlagen und Größe: fussballdaten.de (Summe aller Pflichtspiele für den SV Darmstadt 98 laut Seite). Höchster Marktwert: grobe Schätzung (transfermarkt.de war nicht abrufbar), deshalb 'ca.'. Größe mit ~ ist geschätzt.", "werte": ["spiele", "tore", "vorlagen", "marktwert_mio", "groesse_cm"], "spieler": [{"code": "A1", "name": "Tobias Kempe", "pos": "Mittelfeld", "jg": 1989, "aera": "Legende", "spiele": 288, "tore": 57, "vorlagen": 55, "marktwert_mio": 2.0, "groesse_cm": 184}, {"code": "A2", "name": "Fabian Holland", "pos": "Abwehr", "jg": 1990, "aera": "Legende", "spiele": 322, "tore": 7, "vorlagen": 22, "marktwert_mio": 1.8, "groesse_cm": 172}, {"code": "A3", "name": "Marcel Schuhen", "pos": "Torwart", "jg": 1993, "aera": "Legende", "spiele": 243, "tore": 0, "vorlagen": 2, "marktwert_mio": 2.5, "groesse_cm": 188}, {"code": "A4", "name": "Aytaç Sulu", "pos": "Abwehr", "jg": 1985, "aera": "Legende", "spiele": 204, "tore": 23, "vorlagen": 7, "marktwert_mio": 1.5, "groesse_cm": 183}, {"code": "B1", "name": "Marcel Heller", "pos": "Mittelfeld", "jg": 1986, "aera": "Legende", "spiele": 206, "tore": 22, "vorlagen": 24, "marktwert_mio": 3.0, "groesse_cm": 176}, {"code": "B2", "name": "Serdar Dursun", "pos": "Sturm", "jg": 1991, "aera": "Legende", "spiele": 107, "tore": 59, "vorlagen": 13, "marktwert_mio": 4.0, "groesse_cm": 190}, {"code": "B3", "name": "Dominik Stroh-Engel", "pos": "Sturm", "jg": 1985, "aera": "Legende", "spiele": 94, "tore": 38, "vorlagen": 5, "marktwert_mio": 1.2, "groesse_cm": 197}, {"code": "B4", "name": "Marvin Mehlem", "pos": "Mittelfeld", "jg": 1997, "aera": "Legende", "spiele": 191, "tore": 20, "vorlagen": 22, "marktwert_mio": 2.5, "groesse_cm": 174}, {"code": "C1", "name": "Phillip Tietz", "pos": "Sturm", "jg": 1997, "aera": "Legende", "spiele": 72, "tore": 29, "vorlagen": 12, "marktwert_mio": 5.0, "groesse_cm": 190}, {"code": "C2", "name": "Isac Lidberg", "pos": "Sturm", "jg": 1998, "aera": "Legende", "spiele": 64, "tore": 32, "vorlagen": 10, "marktwert_mio": 4.0, "groesse_cm": 187}, {"code": "C3", "name": "Mathias Honsak", "pos": "Sturm", "jg": 1996, "aera": "Legende", "spiele": 127, "tore": 17, "vorlagen": 11, "marktwert_mio": 3.0, "groesse_cm": 188}, {"code": "C4", "name": "Tim Skarke", "pos": "Sturm", "jg": 1996, "aera": "Legende", "spiele": 112, "tore": 21, "vorlagen": 4, "marktwert_mio": 3.0, "groesse_cm": 181}, {"code": "D1", "name": "Sandro Wagner", "pos": "Sturm", "jg": 1987, "aera": "Legende", "spiele": 34, "tore": 15, "vorlagen": 3, "marktwert_mio": 8.0, "groesse_cm": 194}, {"code": "D2", "name": "Hamit Altıntop", "pos": "Mittelfeld", "jg": 1982, "aera": "Legende", "spiele": 34, "tore": 1, "vorlagen": 0, "marktwert_mio": 8.0, "groesse_cm": 183}, {"code": "D3", "name": "Peter Niemeyer", "pos": "Mittelfeld", "jg": 1983, "aera": "Legende", "spiele": 54, "tore": 2, "vorlagen": 0, "marktwert_mio": 3.0, "groesse_cm": 191}, {"code": "D4", "name": "Jérôme Gondorf", "pos": "Mittelfeld", "jg": 1988, "aera": "Legende", "spiele": 136, "tore": 13, "vorlagen": 10, "marktwert_mio": 2.5, "groesse_cm": 176}, {"code": "E1", "name": "Luca Pfeiffer", "pos": "Sturm", "jg": 1996, "aera": "Legende", "spiele": 60, "tore": 19, "vorlagen": 8, "marktwert_mio": 3.5, "groesse_cm": 196}, {"code": "E2", "name": "Fraser Hornby", "pos": "Sturm", "jg": 1999, "aera": "Legende", "spiele": 68, "tore": 25, "vorlagen": 10, "marktwert_mio": 2.0, "groesse_cm": 194, "groesse_geschaetzt": true}, {"code": "E3", "name": "Braydon Manu", "pos": "Sturm", "jg": 1997, "aera": "Legende", "spiele": 68, "tore": 11, "vorlagen": 12, "marktwert_mio": 2.5, "groesse_cm": 170}, {"code": "E4", "name": "Matthias Bader", "pos": "Abwehr", "jg": 1997, "aera": "Legende", "spiele": 136, "tore": 5, "vorlagen": 14, "marktwert_mio": 2.0, "groesse_cm": 176}, {"code": "F1", "name": "Fabian Nürnberger", "pos": "Mittelfeld", "jg": 1999, "aera": "Legende", "spiele": 78, "tore": 5, "vorlagen": 6, "marktwert_mio": 2.0, "groesse_cm": 179, "groesse_geschaetzt": true}, {"code": "F2", "name": "Immanuel Höhn", "pos": "Abwehr", "jg": 1991, "aera": "Legende", "spiele": 115, "tore": 6, "vorlagen": 1, "marktwert_mio": 1.0, "groesse_cm": 183}, {"code": "F3", "name": "Victor Pálsson", "pos": "Abwehr", "jg": 1991, "aera": "Legende", "spiele": 71, "tore": 6, "vorlagen": 4, "marktwert_mio": 2.5, "groesse_cm": 186}, {"code": "F4", "name": "Klaus Gjasula", "pos": "Mittelfeld", "jg": 1989, "aera": "Legende", "spiele": 72, "tore": 1, "vorlagen": 4, "marktwert_mio": 1.2, "groesse_cm": 190}, {"code": "G1", "name": "Patric Pfeiffer", "pos": "Abwehr", "jg": 1999, "aera": "Aktuell", "spiele": 127, "tore": 7, "vorlagen": 4, "marktwert_mio": 3.5, "groesse_cm": 196}, {"code": "G2", "name": "Aleksandar Vukotić", "pos": "Abwehr", "jg": 1995, "aera": "Aktuell", "spiele": 73, "tore": 7, "vorlagen": 3, "marktwert_mio": 1.5, "groesse_cm": 201}, {"code": "G3", "name": "Kai Klefisch", "pos": "Mittelfeld", "jg": 1999, "aera": "Aktuell", "spiele": 67, "tore": 4, "vorlagen": 4, "marktwert_mio": 4.5, "groesse_cm": 190}, {"code": "G4", "name": "Luca Marseiler", "pos": "Mittelfeld", "jg": 1997, "aera": "Aktuell", "spiele": 62, "tore": 5, "vorlagen": 7, "marktwert_mio": 1.5, "groesse_cm": 176}, {"code": "H1", "name": "Fynn Lakenmacher", "pos": "Sturm", "jg": 2000, "aera": "Aktuell", "spiele": 53, "tore": 2, "vorlagen": 5, "marktwert_mio": 1.5, "groesse_cm": 183, "groesse_geschaetzt": true}, {"code": "H2", "name": "Hiroki Akiyama", "pos": "Mittelfeld", "jg": 2000, "aera": "Aktuell", "spiele": 38, "tore": 4, "vorlagen": 1, "marktwert_mio": 2.0, "groesse_cm": 176}, {"code": "H3", "name": "Marco Richter", "pos": "Mittelfeld", "jg": 1997, "aera": "Aktuell", "spiele": 36, "tore": 2, "vorlagen": 9, "marktwert_mio": 10.0, "groesse_cm": 176}, {"code": "H4", "name": "Alexander Brunst", "pos": "Torwart", "jg": 1995, "aera": "Aktuell", "spiele": 11, "tore": 0, "vorlagen": 0, "marktwert_mio": 0.8, "groesse_cm": 195}]};
+const CARDS = DATA.spieler;
+const ATTRS = [
+  { key: "spiele", label: "Spiele für den SVD", fmt: v => String(v) },
+  { key: "tore", label: "Tore", fmt: v => String(v) },
+  { key: "vorlagen", label: "Vorlagen", fmt: v => String(v) },
+  { key: "marktwert_mio", label: "Höchster Marktwert", fmt: v => "ca. " + v.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " Mio €" },
+  { key: "groesse_cm", label: "Größe", fmt: (v, c) => (c && c.groesse_geschaetzt ? "~" : "") + v + " cm" },
+];
+const LILY = '<svg viewBox="0 0 60 60" aria-hidden="true"><path fill="currentColor" d="M30 4c-4 8-6 16-6 24 0 4 2 8 6 10 4-2 6-6 6-10 0-8-2-16-6-24zM8 18c2 10 7 17 15 21-1-6 0-12 3-16-6-3-12-5-18-5zm44 0c-6 0-12 2-18 5 3 4 4 10 3 16 8-4 13-11 15-21zM18 44h24v4H18zm6 6h12l-2 6h-8z"/></svg>';
+const app = document.getElementById("app");
+const GAME = "spiel/aktuell";
+let connected = true;
+
+let db = null, ref = null, me = null, state = null, busy = false, err = "", confirmReset = false, draftName = "";
+
+function el(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") e.className = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (k === "html") e.innerHTML = v;
+    else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) e.append(k.nodeType ? k : document.createTextNode(String(k)));
+  return e;
+}
+
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function other(s) { return s === "A" ? "B" : "A"; }
+function mySeat(s) { if (!s || !s.seats || !me) return null; if (s.seats.A && s.seats.A.id === me) return "A"; if (s.seats.B && s.seats.B.id === me) return "B"; return null; }
+function seatName(s, seat) { return (s.seats && s.seats[seat] && s.seats[seat].name) || (seat === "A" ? "Spieler 1" : "Spieler 2"); }
+
+async function save(next) {
+  busy = true; err = ""; render();
+  try { await ref.set(next); }
+  catch (e) { err = "Speichern hat nicht geklappt. Prüfe die Internetverbindung und tippe nochmal."; }
+  busy = false; render();
+}
+
+function blankState() { return { status: "lobby", seats: { A: null, B: null }, hands: { A: [], B: [] }, pot: [], turn: "A", last: null, round: 0, winner: null }; }
+function normalize(v) {
+  const s = v && typeof v === "object" ? clone(v) : blankState();
+  s.status = s.status || "lobby";
+  s.seats = s.seats || {}; s.seats.A = s.seats.A || null; s.seats.B = s.seats.B || null;
+  s.hands = s.hands || {}; s.hands.A = s.hands.A || []; s.hands.B = s.hands.B || [];
+  s.pot = s.pot || []; s.last = s.last || null; s.round = s.round || 0; s.winner = s.winner || null; s.turn = s.turn || "A";
+  return s;
+}
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+async function takeSeat(seat) {
+  const name = draftName.trim().slice(0, 24);
+  if (!name) { err = "Gib zuerst deinen Namen ein."; render(); return; }
+  const snap = await ref.get();
+  const s = normalize(snap.val());
+  if (!s.seats) s.seats = { A: null, B: null };
+  if (s.seats[seat] && s.seats[seat].id !== me) { err = "Der Platz ist gerade vergeben worden."; render(); return; }
+  if (s.seats[other(seat)] && s.seats[other(seat)].id === me) s.seats[other(seat)] = null;
+  s.seats[seat] = { id: me, name };
+  await save(s);
+}
+
+async function startGame() {
+  const s = clone(state);
+  const deck = shuffle(CARDS.map((_, i) => i));
+  s.hands = { A: deck.slice(0, 16), B: deck.slice(16) };
+  s.pot = []; s.last = null; s.round = 0; s.winner = null; s.status = "play";
+  s.turn = Math.random() < .5 ? "A" : "B";
+  await save(s);
+}
+
+async function choose(key) {
+  if (busy) return;
+  const s = clone(state); const seat = mySeat(s);
+  if (s.status !== "play" || s.turn !== seat) return;
+  const a = s.hands.A.shift(), b = s.hands.B.shift();
+  const va = CARDS[a][key], vb = CARDS[b][key];
+  const winner = va > vb ? "A" : vb > va ? "B" : "tie";
+  const won = [a, b];
+  if (winner === "tie") { s.pot = s.pot.concat(won); }
+  else { s.hands[winner] = s.hands[winner].concat(won, s.pot); s.pot = []; s.turn = winner; }
+  s.round += 1;
+  s.last = { by: seat, attr: key, A: a, B: b, winner, round: s.round };
+  if (!s.hands.A.length || !s.hands.B.length) {
+    s.status = "over";
+    s.winner = s.hands.A.length > s.hands.B.length ? "A" : s.hands.B.length > s.hands.A.length ? "B" : "tie";
+  }
+  await save(s);
+}
+
+async function resetGame(keepSeats) {
+  const s = blankState();
+  if (keepSeats && state && state.seats) s.seats = clone(state.seats);
+  confirmReset = false;
+  await save(s);
+}
+
+function cardView(idx, opts = {}) {
+  const c = CARDS[idx];
+  const rows = ATTRS.map(at => {
+    const kids = [el("span", {}, at.label), el("span", { class: "v" }, at.fmt(c[at.key], c))];
+    const cls = "row" + (opts.chosen === at.key ? " chosen" : "");
+    return opts.pick ? el("button", { class: cls, type: "button", onclick: () => choose(at.key), disabled: busy }, kids) : el("div", { class: cls }, kids);
+  });
+  return el("article", { class: "card" + (opts.flip ? " flip" : ""), "aria-label": "Karte " + c.code + " " + c.name },
+    el("div", { class: "top" },
+      el("div", { class: "code" }, c.code),
+      el("div", { class: "name" }, c.name),
+      el("div", { class: "meta" }, el("span", { class: "era" }, c.aera), " · " + c.pos + " · Jg. " + c.jg)),
+    el("div", { class: "art", html: LILY }),
+    el("div", { class: "rows" }, rows));
+}
+
+function scoreBar(s, seat) {
+  const mk = sd => el("div", { class: "who" },
+    el("span", { class: "nm" }, seatName(s, sd) + (seat === sd ? " (du)" : "")),
+    el("span", { class: "n" }, s.hands[sd].length),
+    s.status === "play" && s.turn === sd ? el("span", {}, el("span", { class: "turnpill" }, "am Zug")) : el("span", { class: "small" }, "Karten"));
+  return el("div", { class: "panel" },
+    el("div", { class: "score" }, mk("A"), el("span", { class: "vs" }, s.pot.length ? "Topf " + s.pot.length : "gegen"), mk("B")));
+}
+
+function duelView(s, seat) {
+  const L = s.last; if (!L) return null;
+  const at = ATTRS.find(a => a.key === L.attr);
+  const mini = sd => { const c = CARDS[L[sd]]; return el("div", { class: "mini" + (L.winner === sd ? " w" : "") },
+    el("span", { class: "who" }, seatName(s, sd)), el("span", { class: "pn" }, c.code + " " + c.name), el("span", { class: "pv" }, at.fmt(c[L.attr], c))); };
+  let text, cls = "result";
+  if (L.winner === "tie") text = "Gleichstand, Karten gehen in den Topf";
+  else if (!seat) text = seatName(s, L.winner) + " gewinnt den Stich";
+  else if (L.winner === seat) { text = "Stich für dich"; cls += " w"; }
+  else { text = "Stich für " + seatName(s, L.winner); cls += " l"; }
+  return el("section", { class: "panel" },
+    el("span", { class: "small" }, "Runde " + L.round + " · " + seatName(s, L.by) + " wählte " + at.label),
+    el("div", { class: "duel" }, mini("A"), mini("B")),
+    el("span", { class: cls }, text));
+}
+
+function lobbyView(s) {
+  const seat = mySeat(s);
+  const seatBox = sd => {
+    const t = s.seats && s.seats[sd];
+    return el("div", { class: "seat" + (t ? " taken" : "") },
+      el("div", { class: "lbl" }, sd === "A" ? "Platz 1" : "Platz 2"),
+      t ? el("div", { class: "nm" }, t.name + (t.id === me ? " (du)" : "")) :
+        el("button", { class: "btn", type: "button", onclick: () => takeSeat(sd), disabled: busy, style: "margin-top:6px;width:100%" }, "Hier hinsetzen"));
+  };
+  const both = s.seats && s.seats.A && s.seats.B;
+  return el("section", { class: "panel" },
+    el("h2", {}, both ? "Alle da. Anpfiff?" : "Wer spielt mit?"),
+    !seat ? el("div", {}, el("label", { for: "name", class: "small" }, "Dein Name"),
+      el("input", { id: "name", type: "text", maxlength: "24", placeholder: "z. B. Philipp", value: draftName, oninput: e => { draftName = e.target.value; } })) : null,
+    el("div", { class: "seats" }, seatBox("A"), seatBox("B")),
+    both && seat ? el("button", { class: "btn", type: "button", onclick: startGame, disabled: busy }, "Karten austeilen") : null,
+    !both ? el("p", { class: "small", style: "margin:0" }, "Schick deinem Bruder denselben Link. Sobald beide sitzen, teilt einer von euch die 32 Karten aus.") : null);
+}
+
+function footerControls(s) {
+  if (!mySeat(s)) return null;
+  if (confirmReset) return el("div", { class: "panel confirm" },
+    el("strong", {}, "Spiel wirklich abbrechen? Alle Karten werden neu gemischt."),
+    el("div", { class: "btns" },
+      el("button", { class: "btn", type: "button", onclick: () => resetGame(true) }, "Ja, neu mischen"),
+      el("button", { class: "btn ghost", type: "button", onclick: () => { confirmReset = false; render(); } }, "Weiterspielen")));
+  return el("div", { class: "btns" },
+    el("button", { class: "btn ghost", type: "button", onclick: () => { confirmReset = true; render(); } }, "Spiel abbrechen"));
+}
+
+let lastRoundShown = -1;
+function render() {
+  const s = state || blankState();
+  const seat = mySeat(s);
+  const kids = [];
+  if (err) kids.push(el("p", { class: "err", role: "alert", style: "margin:0" }, err));
+  if (s.status === "lobby") {
+    kids.push(lobbyView(s));
+  } else {
+    kids.push(scoreBar(s, seat));
+    if (s.status === "over") {
+      const txt = s.winner === "tie" ? "Unentschieden" : (seat && s.winner === seat ? "Du hast gewonnen!" : seatName(s, s.winner) + " hat gewonnen");
+      kids.push(el("section", { class: "panel" }, el("div", { class: "trophy" }, txt),
+        el("span", { class: "small" }, "Nach " + s.round + " Runden."),
+        seat ? el("div", { class: "btns" },
+          el("button", { class: "btn", type: "button", onclick: startGame, disabled: busy }, "Revanche"),
+          el("button", { class: "btn ghost", type: "button", onclick: () => resetGame(false), disabled: busy }, "Plätze freigeben")) : null));
+      const d = duelView(s, seat); if (d) kids.push(d);
+    } else {
+      const d = duelView(s, seat); if (d) kids.push(d);
+      if (seat) {
+        const mine = s.hands[seat][0];
+        const myTurn = s.turn === seat;
+        kids.push(el("p", { class: "hint" + (myTurn ? " go" : ""), style: "margin:0" },
+          myTurn ? "Du bist dran: tippe auf den Wert, mit dem du stechen willst." : seatName(s, other(seat)) + " wählt gerade einen Wert …"));
+        const flip = s.round !== lastRoundShown;
+        kids.push(cardView(mine, { pick: myTurn && !busy, flip }));
+        lastRoundShown = s.round;
+        kids.push(el("p", { class: "small", style: "margin:0;text-align:center" }, "Deine oberste Karte. Darunter liegen noch " + (s.hands[seat].length - 1) + "."));
+      } else {
+        kids.push(el("p", { class: "small" }, "Hier spielen gerade " + seatName(s, "A") + " und " + seatName(s, "B") + ". Du schaust zu."));
+      }
+      kids.push(footerControls(s));
+    }
+  }
+  const focusedName = document.activeElement && document.activeElement.id === "name";
+  app.replaceChildren(...kids.filter(Boolean));
+  if (focusedName) { const n = document.getElementById("name"); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }
+}
+
+function offline(msg) {
+  app.replaceChildren(el("section", { class: "panel" }, el("h2", {}, "Keine Verbindung zum Spiel"), el("p", { style: "margin:0" }, msg)),
+    el("h2", {}, "Vorschau einer Karte"), cardView(0));
+}
+
+function myId() {
+  let id = null;
+  try { id = localStorage.getItem("lq-id"); if (!id) { id = "p" + Math.random().toString(36).slice(2, 12); localStorage.setItem("lq-id", id); } }
+  catch (e) { id = "p" + Math.random().toString(36).slice(2, 12); }
+  return id;
+}
+
+function boot() {
+  render();
+  if (!window.firebase) { offline("Die Seite konnte nicht geladen werden. Prüfe die Internetverbindung und lade neu."); return; }
+  firebase.initializeApp(firebaseConfig);
+  me = myId();
+  ref = firebase.database().ref(GAME);
+  ref.on("value", snap => { state = normalize(snap.val()); render(); },
+    e => offline("Die Datenbank hat den Zugriff verweigert. Prüfe die Regeln in Firebase."));
+}
+boot();
+</script>
+</body>
+</html>
