@@ -101,7 +101,14 @@ input[type=text] { font: 16px var(--font-body); padding: 12px; border-radius: 10
 .err { color: var(--lose); font-weight: 600; }
 .confirm { display: flex; flex-direction: column; gap: 8px; }
 .trophy { font-family: var(--font-display); font-weight: 800; font-size: 34px; text-transform: uppercase; color: var(--lilie); line-height: 1.05; text-wrap: balance; }
+.reveal { align-items: stretch; text-align: center; }
+.reveal .cat { font-family: var(--font-display); font-weight: 800; font-size: 34px; line-height: 1; text-transform: uppercase; color: var(--lilie); text-wrap: balance; }
+.count { font-family: var(--font-display); font-weight: 800; font-size: 96px; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
+.mini.hidden .pn, .mini.hidden .pv { color: var(--muted); }
 @media (prefers-reduced-motion: no-preference) {
+  .count { animation: pop .8s ease-out; }
+  @keyframes pop { from { transform: scale(1.8); opacity: 0 } 30% { opacity: 1 } to { transform: scale(1); opacity: 1 } }
+  .pop { animation: pop .45s ease-out; }
   .flip { animation: flip .35s ease-out; }
   @keyframes flip { from { transform: rotateY(70deg); opacity: .3 } to { transform: none; opacity: 1 } }
 }
@@ -302,12 +309,55 @@ function footerControls(s) {
 }
 
 let lastRoundShown = -1;
+let seenRound = null, revealQueue = [], reveal = null, countTimer = null;
+
+function queueReveals(s) {
+  const r = s.last ? s.last.round : 0;
+  if (seenRound === null || s.status === "lobby" || r < seenRound) { if (seenRound !== null) { revealQueue = []; reveal = null; clearInterval(countTimer); } seenRound = r; return; }
+  if (s.last && r > seenRound) { revealQueue.push(clone(s.last)); seenRound = r; }
+  if (!reveal && revealQueue.length) nextReveal();
+}
+function nextReveal() {
+  clearInterval(countTimer);
+  reveal = revealQueue.length ? { last: revealQueue.shift(), n: 3 } : null;
+  if (!reveal) { render(); return; }
+  countTimer = setInterval(() => { reveal.n -= 1; if (reveal.n <= 0) clearInterval(countTimer); render(); }, 800);
+  render();
+}
+function revealView(s, seat) {
+  const L = reveal.last, at = ATTRS.find(a => a.key === L.attr), done = reveal.n <= 0;
+  const order = seat ? [seat, other(seat)] : ["A", "B"];
+  const mini = sd => {
+    const c = CARDS[L[sd]], show = done || sd === seat;
+    return el("div", { class: "mini" + (done && L.winner === sd ? " w" : "") + (show ? "" : " hidden") + (done && sd !== seat ? " pop" : "") },
+      el("span", { class: "who" }, seatName(s, sd) + (sd === seat ? " (du)" : "")),
+      el("span", { class: "pn" }, show ? c.code + " " + c.name : "? ? ?"),
+      el("span", { class: "pv" }, show ? at.fmt(c[L.attr], c) : "?"));
+  };
+  let result = null;
+  if (done) {
+    let text, cls = "result pop";
+    if (L.winner === "tie") text = "Gleichstand, Karten gehen in den Topf";
+    else if (!seat) text = seatName(s, L.winner) + " gewinnt den Stich";
+    else if (L.winner === seat) { text = "Stich für dich!"; cls += " w"; }
+    else { text = "Stich für " + seatName(s, L.winner); cls += " l"; }
+    result = el("span", { class: cls }, text);
+  }
+  return el("section", { class: "panel reveal" },
+    el("span", { class: "small" }, "Runde " + L.round + " · " + (L.by === seat ? "Du wählst" : seatName(s, L.by) + " wählt")),
+    el("div", { class: "cat" }, at.label),
+    done ? result : el("div", { class: "count", "aria-live": "polite" }, String(reveal.n)),
+    el("div", { class: "duel" }, order.map(mini)),
+    done ? el("button", { class: "btn", type: "button", onclick: nextReveal }, revealQueue.length ? "Nächste Runde zeigen" : "Weiter") : null);
+}
 function render() {
   const s = state || blankState();
   const seat = mySeat(s);
   const kids = [];
   if (err) kids.push(el("p", { class: "err", role: "alert", style: "margin:0" }, err));
-  if (s.status === "lobby") {
+  if (reveal && s.status !== "lobby") {
+    kids.push(revealView(s, seat));
+  } else if (s.status === "lobby") {
     kids.push(lobbyView(s));
   } else {
     kids.push(scoreBar(s, seat));
@@ -359,7 +409,7 @@ function boot() {
   firebase.initializeApp(firebaseConfig);
   me = myId();
   ref = firebase.database().ref(GAME);
-  ref.on("value", snap => { state = normalize(snap.val()); render(); },
+  ref.on("value", snap => { state = normalize(snap.val()); queueReveals(state); render(); },
     e => offline("Die Datenbank hat den Zugriff verweigert. Prüfe die Regeln in Firebase."));
 }
 boot();
