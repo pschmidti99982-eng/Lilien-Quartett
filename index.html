@@ -190,6 +190,24 @@ function normalize(v) {
 }
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
 
+async function claimSeat(seat) {
+  const snap = await ref.get();
+  const s = normalize(snap.val());
+  if (!s.seats[seat]) return;
+  if (s.seats[other(seat)] && s.seats[other(seat)].id === me) { err = "Du sitzt schon auf dem anderen Platz."; render(); return; }
+  s.seats[seat] = { id: me, name: s.seats[seat].name };
+  await save(s);
+}
+
+function claimPanel(s) {
+  return el("section", { class: "panel" },
+    el("h2", {}, "Wer bist du?"),
+    el("p", { class: "small", style: "margin:0" }, "Beide Plätze sind vergeben. Wenn du einer der beiden bist, zum Beispiel auf einem anderen Gerät, tippe auf deinen Namen und spiel hier weiter."),
+    el("div", { class: "btns" }, ["A", "B"].map(sd =>
+      el("button", { class: "btn", type: "button", onclick: () => claimSeat(sd), disabled: busy }, "Ich bin " + seatName(s, sd)))),
+    el("button", { class: "btn ghost", type: "button", onclick: () => resetGame(false), disabled: busy }, "Plätze freigeben und neu anfangen"));
+}
+
 async function takeSeat(seat) {
   const name = draftName.trim().slice(0, 24);
   if (!name) { err = "Gib zuerst deinen Namen ein."; render(); return; }
@@ -288,12 +306,14 @@ function lobbyView(s) {
         el("button", { class: "btn", type: "button", onclick: () => takeSeat(sd), disabled: busy, style: "margin-top:6px;width:100%" }, "Hier hinsetzen"));
   };
   const both = s.seats && s.seats.A && s.seats.B;
+  if (both && !seat) return claimPanel(s);
   return el("section", { class: "panel" },
     el("h2", {}, both ? "Alle da. Anpfiff?" : "Wer spielt mit?"),
     !seat ? el("div", {}, el("label", { for: "name", class: "small" }, "Dein Name"),
       el("input", { id: "name", type: "text", maxlength: "24", placeholder: "z. B. Philipp", value: draftName, oninput: e => { draftName = e.target.value; } })) : null,
     el("div", { class: "seats" }, seatBox("A"), seatBox("B")),
     both && seat ? el("button", { class: "btn", type: "button", onclick: startGame, disabled: busy }, "Karten austeilen") : null,
+    seat ? el("button", { class: "btn ghost", type: "button", onclick: () => resetGame(false), disabled: busy }, "Plätze freigeben") : null,
     !both ? el("p", { class: "small", style: "margin:0" }, "Schick deinem Bruder denselben Link. Sobald beide sitzen, teilt einer von euch die 32 Karten aus.") : null);
 }
 
@@ -381,7 +401,7 @@ function render() {
         lastRoundShown = s.round;
         kids.push(el("p", { class: "small", style: "margin:0;text-align:center" }, "Deine oberste Karte. Darunter liegen noch " + (s.hands[seat].length - 1) + "."));
       } else {
-        kids.push(el("p", { class: "small" }, "Hier spielen gerade " + seatName(s, "A") + " und " + seatName(s, "B") + ". Du schaust zu."));
+        kids.push(claimPanel(s));
       }
       kids.push(footerControls(s));
     }
